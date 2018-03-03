@@ -80,9 +80,9 @@ while 1:
   
   jsondata = json.dumps(data)
 
-  MQTT_TOPIC = MQTT_TOPIC + "/" + data['device']  
+  full_topic = MQTT_TOPIC + "/" + data['device']  
 
   mqtt_client = mqtt.Client()
   mqtt_client.username_pw_set(MQTT_USER, MQTT_PASS)
   mqtt_client.connect(MQTT_HOST, MQTT_PORT)
-  mqtt_client.publish(MQTT_TOPIC, jsondata)
+  mqtt_client.publish(full_topic, jsondata)
