@@ -79,6 +79,9 @@ while 1:
   data['bat'] = batt
   
   jsondata = json.dumps(data)
+
+  MQTT_TOPIC = MQTT_TOPIC + "/" + data['device']  
+
   mqtt_client = mqtt.Client()
   mqtt_client.username_pw_set(MQTT_USER, MQTT_PASS)
   mqtt_client.connect(MQTT_HOST, MQTT_PORT)
