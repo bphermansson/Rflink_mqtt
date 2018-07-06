@@ -29,9 +29,13 @@ while 1:
  if len(x) > 60: # Ignore start message from Rflink
   # Extract data from Rflink and create a Mqtt message
   x=x.rstrip()
-  #print x
-  inputdata = x.split(';')
+  print x
+  # Can look like:
+  # 20;01;DKW2012;  ID=0022;TEMP=00a6;HUM=69;WINSP=0056;WINGS=00ab;RAIN=2871;WINDIR=0004;BAT=OK;
+  # 20;05;Alecto V2;ID=0069;TEMP=0113;HUM=36;WINSP=0000;WINGS=0000;RAIN=0000;BAT=OK;
 
+  inputdata = x.split(';')
+  name = inputdata[2]
   id = inputdata[3].split('=')
   id = id[1]
   temp = inputdata[4].split('=')
@@ -44,8 +48,16 @@ while 1:
   wings = wings[1]
   rain = inputdata[8].split('=')
   rain = rain[1]
-  batt = inputdata[9].split('=')
-  batt = batt[1]
+  if (name == "DKW2012"):
+    winddir = inputdata[9].split('=')
+    winddir = winddir[1]
+    batt = inputdata[10].split('=')
+    batt = batt[1]
+  else:
+    batt = inputdata[9].split('=')
+    batt = batt[1]
+    winddir = "NA"	# This unit doesnt measure wind direction
+
 
   # Convert temp from hex format to human readable
   '''
@@ -76,13 +88,16 @@ while 1:
   data['winsp'] = winsp
   data['wings'] = wings
   data['rain'] = rain
+  data['winddir'] = winddir
   data['bat'] = batt
   
   jsondata = json.dumps(data)
 
   full_topic = MQTT_TOPIC + "/" + data['device']  
-
-  mqtt_client = mqtt.Client()
-  mqtt_client.username_pw_set(MQTT_USER, MQTT_PASS)
-  mqtt_client.connect(MQTT_HOST, MQTT_PORT)
-  mqtt_client.publish(full_topic, jsondata)
+  try:
+    mqtt_client = mqtt.Client()
+    mqtt_client.username_pw_set(MQTT_USER, MQTT_PASS)
+    mqtt_client.connect(MQTT_HOST, MQTT_PORT)
+    mqtt_client.publish(full_topic, jsondata)
+  except:
+    print "Unexpected error:", sys.exc_info()[0]
