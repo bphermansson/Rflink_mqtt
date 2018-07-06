@@ -1,0 +1,12 @@
+[Unit]
+Description=Rflink2Mqtt
+After=network-online.target
+
+[Service]
+Type=simple
+User=%i
+ExecStart=/usr/local/bin/rflink_mqtt.py
+
+[Install]
+WantedBy=multi-user.target
+
