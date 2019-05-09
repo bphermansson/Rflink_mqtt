@@ -7,12 +7,17 @@ import time
 import serial
 import paho.mqtt.client as mqtt
 import json
+import config
 
 MQTT_HOST = '192.168.1.79'
 MQTT_PORT = 1883
-MQTT_USER = 'emonpi'
-MQTT_PASS = 'emonpimqtt2016'
 MQTT_TOPIC = 'Rflink'
+
+'''
+Set username and password for Mqtt-server in a file called "config.py":
+MQTT_USER = 'user'
+MQTT_PASS = 'pass'
+'''
 
 ser = serial.Serial(
  port='/dev/ttyACM0',
@@ -96,7 +101,7 @@ while 1:
   full_topic = MQTT_TOPIC + "/" + data['device']  
   try:
     mqtt_client = mqtt.Client()
-    mqtt_client.username_pw_set(MQTT_USER, MQTT_PASS)
+    mqtt_client.username_pw_set(config.MQTT_USER, config.MQTT_PASS)
     mqtt_client.connect(MQTT_HOST, MQTT_PORT)
     mqtt_client.publish(full_topic, jsondata)
   except:
