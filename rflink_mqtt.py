@@ -8,8 +8,9 @@ import serial
 import paho.mqtt.client as mqtt
 import json
 import config
+import sys
 
-MQTT_HOST = '192.168.1.79'
+MQTT_HOST = '192.168.1.190'
 MQTT_PORT = 1883
 MQTT_TOPIC = 'Rflink'
 
