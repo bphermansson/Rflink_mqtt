@@ -16,19 +16,14 @@ MQTT_HOST = '192.168.1.190'
 MQTT_PORT = 1883
 MQTT_TOPIC = 'Rflink'
 
-'''
-Set username and password for Mqtt-server in a file called "config.py":
-MQTT_USER = 'user'
-MQTT_PASS = 'pass'
-'''
-
-print(sys.argv[1])
+if (len(sys.argv) != 2):
+    print("Wrong number of args, try 'rflink_mqtt <port>'. Port can be like '/dev/ttyUSB0'")
+    sys.exit(0)
 prt = sys.argv[1]
-prt_check = prt[:6]
-print(prt_check)
+print("Using port " + prt)
 
 ser = serial.Serial(
- port='/dev/ttyUSB0',
+ port=prt,
  baudrate = 57600,
  parity=serial.PARITY_NONE,
  stopbits=serial.STOPBITS_ONE,
@@ -37,19 +32,19 @@ ser = serial.Serial(
 )
 mqttdata = {}
 
-print ("OK")
-
 while 1:
- x=ser.readline()
- '''if len(str(x))>=20:
-  string = x.decode('utf-8')
-  print (string)
- '''
- #if len(x) > 60: # Ignore start message from Rflink
- if x[:5] != "20;00" and len(x) >= 20:
+ try:   
+  x=ser.readline()
+ except KeyboardInterrupt:
+  print ("Exit")
+  sys.exit(0)
+ except:
+  print ("Unexpected error:", sys.exc_info()[0])
+
+ if x[:5] != "20;00" and len(x) >= 20:	# Ignore start message from Rflink
   # Extract data from Rflink and create a Mqtt message
   x=x.rstrip()
-  print("Got data")
+  #print("Got data")
   print (x)
   # Can look like:
   # 20;00;Nodo RadioFrequencyLink - RFLink Gateway V1.1 - R
@@ -65,12 +60,12 @@ while 1:
 
       for item in inputdata:
         entity = item.split("=")
-        print (item + "(len:" + str(len(entity)) + ")")
+        #print (item + "(len:" + str(len(entity)) + ")")
         if(len(entity)>1):
         
           if(entity[0] == "TEMP"):
             tempdec = int(entity[1],16)	# Convert to decimal
-            print ("tempdec: " + str(tempdec))	# Temp * 10
+            #print ("tempdec: " + str(tempdec))	# Temp * 10
             tempf = tempdec / float(10) # Force tempf to be a float to preserve decimals
             sign = entity[1][:1]	# Highest bit is set when negative temperature
             if (sign == '8'):
@@ -83,12 +78,12 @@ while 1:
           else:
             mqttdata[entity[0]] = entity[1]
       jsondata = json.dumps(mqttdata)
-      print (jsondata)
+      #print (jsondata)
       
       print ("Send mqtt")
 
-      full_topic = MQTT_TOPIC + "/" + mqttdata["NAME"] + "_" + mqttdata["ID"] 
       try:
+        full_topic = MQTT_TOPIC + "/" + mqttdata["NAME"] + "_" + mqttdata["ID"] 
         mqtt_client = mqtt.Client()
         #mqtt_client.username_pw_set(config.MQTT_USER, config.MQTT_PASS)
         mqtt_client.connect(MQTT_HOST, MQTT_PORT)
@@ -99,4 +94,4 @@ while 1:
   except AttributeError:
     traceback.print_exc()
   
-  print("Done")
+  #print("Done")
