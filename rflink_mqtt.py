@@ -48,13 +48,16 @@ while 1:
   # Extract data from Rflink and create a Mqtt message
   x=x.rstrip()
   #print("Got data")
-  print (x)
+  print ("x: " + str(x))
   # Can look like:
   # 20;00;Nodo RadioFrequencyLink - RFLink Gateway V1.1 - R
   # 20;02;Firstline;ID=0085;TEMP=0079;
   # 20;01;DKW2012;  ID=0022;TEMP=00a6;HUM=69;WINSP=0056;WINGS=00ab;RAIN=2871;WINDIR=0004;BAT=OK;
   # 20;05;Alecto V2;ID=0069;TEMP=0113;HUM=36;WINSP=0000;WINGS=0000;RAIN=0000;BAT=OK;
-
+  # 20;57;Xiron;ID=5801;TEMP=800f;HK
+  # 0BF;Xiron;ID=5801;TEMP=8022;HUM=84;BAT=OK
+  # 20;BE;UPM_Esic;ID=0001;TEMP=00ac;HUM=30;BAT=OK;
+  # 20;2D;Digitech;ID=0216;TEMP=00c1;BAT=LOW
   try:
     
     x = str(x)
@@ -65,10 +68,11 @@ while 1:
     #print(x);
     inputdata = x.split(';')
     listLength = len(inputdata)
-    if (listLength>0):
+    print (listLength)	# UPM = 8 parts. 
+    if (listLength>5):
         if(inputdata[1] != "00"):
           mqttdata["NAME"] = inputdata[2]
-
+          
           for item in inputdata:
             entity = item.split("=")
             #print (item + "(len:" + str(len(entity)) + ")")
@@ -76,6 +80,7 @@ while 1:
             
               if(entity[0] == "TEMP"):
               #if(entity[0] != ""):
+                #print("TEMP: ")
                 #print(entity[1])
                 #entity[1] = "8032";  	# = -5.0C
                 sign = entity[1][:1]	# Highest bit is set when negative temperature
@@ -86,15 +91,21 @@ while 1:
                     hex = int(entity[1],16) - int(8000)
                     #print (hex)
                     dec = int(str(hex), 16) / 10
-                    #print(dec)
-                    
-                comptemp = charsign + str(dec)
-                mqttdata[entity[0]] = comptemp
-                print (comptemp)
-              else:
-                mqttdata[entity[0]] = entity[1]
+                    #print(dec)                   
+                    comptemp = charsign + str(dec)
+                    mqttdata[entity[0]] = comptemp
+                    print (comptemp)
+                else:
+                    dec = int(str(entity[1]), 16) / 10
+                    mqttdata[entity[0]] = str(dec)
+              elif (entity[0] == "ID"):              
+                mqttdata["ID"] = entity[1]
+              elif (entity[0] == "HUM"):              
+                mqttdata["HUM"] = entity[1]
+              elif (entity[0] == "BAT"):
+                mqttdata["BAT"] = entity[1]  
           jsondata = json.dumps(mqttdata)
-          #print (jsondata)
+          print (jsondata)
           
           print ("Send mqtt")
 
