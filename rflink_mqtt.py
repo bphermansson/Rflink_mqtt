@@ -59,16 +59,15 @@ while 1:
   # 20;BE;UPM_Esic;ID=0001;TEMP=00ac;HUM=30;BAT=OK;
   # 20;2D;Digitech;ID=0216;TEMP=00c1;BAT=LOW
   try:
-    
     x = str(x)
-    
     # To test:
-    #x="20;05;Alecto V2;ID=0069;TEMP=8032;HUM=36;WINSP=0000;WINGS=0000;RAIN=0000;BAT=OK;" 
+    #x="20;05;Alecto V2;ID=0069;TEMP=8032;HUM=36;WINSP=0000;WINGS=0000;RAIN=0000;BAT=OK;"
+    #x: b'20;01;Xiron;ID=5801;TEMP=800b;HUM=86;BAT=OK;'
     # -5.0 = 50dec = 0032h. High bit high indicates negative, thus = 8032.  
     #print(x);
     inputdata = x.split(';')
     listLength = len(inputdata)
-    print (listLength)	# UPM = 8 parts. 
+    #print (listLength)	# UPM = 8 parts. 
     if (listLength>5):
         if(inputdata[1] != "00"):
           mqttdata["NAME"] = inputdata[2]
@@ -86,15 +85,20 @@ while 1:
                 sign = entity[1][:1]	# Highest bit is set when negative temperature
                 
                 if (sign == '8'):
-                    #print("Negative test")
+                    #print("Negative value")
                     charsign = "-"
-                    hex = int(entity[1],16) - int(8000)
-                    #print (hex)
-                    dec = int(str(hex), 16) / 10
+                    #print (int(entity[1],16))
+                    offset = int("8000", 16)
+                    
+                    hexsum = int(entity[1],16) - offset
+                    #print ("hex")
+                    #print (hex(hexsum))
+                    dec = int(str(hexsum), 16) / 10
+                    #print("dec: ")
                     #print(dec)                   
                     comptemp = charsign + str(dec)
                     mqttdata[entity[0]] = comptemp
-                    print (comptemp)
+                    #print (comptemp)
                 else:
                     dec = int(str(entity[1]), 16) / 10
                     mqttdata[entity[0]] = str(dec)
